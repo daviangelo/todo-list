@@ -2,7 +2,9 @@ package com.lessa.todolist.persistence.entity;
 
 import com.lessa.todolist.domain.Status;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -12,12 +14,16 @@ import java.util.UUID;
 @Table(name = "todo_item")
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class TodoItemEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(columnDefinition = "uuid")
     private UUID id;
+
+    private String description;
 
     @Enumerated(EnumType.STRING)
     private Status status;

@@ -11,8 +11,16 @@ import java.util.UUID;
 public class TodoItem {
 
     private UUID id;
+    private String description;
     private Status status;
     private LocalDateTime creationDate;
     private LocalDateTime dueDate;
     private LocalDateTime doneDate;
+
+    public static TodoItem createNew(String description, LocalDateTime dueDate) {
+        var todoItem = new TodoItem();
+        todoItem.setDescription(description);
+        todoItem.setDueDate(dueDate);
+        return todoItem;
+    }
 }

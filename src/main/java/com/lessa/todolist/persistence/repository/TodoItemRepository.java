@@ -1,5 +1,6 @@
 package com.lessa.todolist.persistence.repository;
 
+import com.lessa.todolist.domain.Status;
 import com.lessa.todolist.persistence.entity.TodoItemEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,11 +12,11 @@ import java.util.UUID;
 
 public interface TodoItemRepository extends JpaRepository<TodoItemEntity, UUID> {
 
-    Page<TodoItemEntity> findAllByStatus(String status, Pageable pageable);
+    Page<TodoItemEntity> findAllByStatus(Status status, Pageable pageable);
 
     @Modifying
     //TODO @Query("")
-    void updatePastDueItemsStatus(LocalDateTime actualDateTime);
+    int updatePastDueItemsStatus(LocalDateTime actualDateTime);
 
 
 }
