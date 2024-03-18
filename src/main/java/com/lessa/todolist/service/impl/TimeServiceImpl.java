@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 public class TimeServiceImpl implements TimeService {
 
     @Override
-    public LocalDateTime get() {
+    public LocalDateTime getLocalDateTime() {
         return LocalDateTime.now();
     }
 }

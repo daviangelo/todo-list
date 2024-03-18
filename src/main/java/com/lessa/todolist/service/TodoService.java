@@ -1,6 +1,7 @@
 package com.lessa.todolist.service;
 
 import com.lessa.todolist.domain.TodoItem;
+import com.lessa.todolist.service.exception.ConflictException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -8,7 +9,7 @@ import java.util.UUID;
 
 public interface TodoService {
 
-    TodoItem add(TodoItem item);
+    TodoItem add(TodoItem item) throws ConflictException;
 
     TodoItem updateDescription(UUID itemId, String description);
 

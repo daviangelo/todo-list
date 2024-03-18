@@ -1,5 +1,6 @@
 package com.lessa.todolist.domain;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,6 +9,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
+@AllArgsConstructor
 public class TodoItem {
 
     private UUID id;
@@ -16,11 +18,4 @@ public class TodoItem {
     private LocalDateTime creationDate;
     private LocalDateTime dueDate;
     private LocalDateTime doneDate;
-
-    public static TodoItem createNew(String description, LocalDateTime dueDate) {
-        var todoItem = new TodoItem();
-        todoItem.setDescription(description);
-        todoItem.setDueDate(dueDate);
-        return todoItem;
-    }
 }

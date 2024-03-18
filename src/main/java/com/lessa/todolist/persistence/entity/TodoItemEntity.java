@@ -1,11 +1,9 @@
 package com.lessa.todolist.persistence.entity;
 
 import com.lessa.todolist.domain.Status;
+import com.lessa.todolist.domain.TodoItem;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -31,4 +29,14 @@ public class TodoItemEntity {
     private LocalDateTime creationDate;
     private LocalDateTime dueDate;
     private LocalDateTime doneDate;
+
+    public static TodoItemEntity toEntity(TodoItem domain) {
+        return new TodoItemEntity(domain.getId(), domain.getDescription(), domain.getStatus(), domain.getCreationDate(),
+                domain.getDueDate(), domain.getDoneDate());
+    }
+
+    public TodoItem toDomain() {
+        return new TodoItem(this.getId(), this.getDescription(), this.getStatus(), this.getCreationDate(),
+                this.getDueDate(), this.getDoneDate());
+    }
 }

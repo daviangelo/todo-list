@@ -1,9 +1,12 @@
 package com.lessa.todolist.service.impl;
 
+import com.lessa.todolist.domain.Status;
 import com.lessa.todolist.domain.TodoItem;
+import com.lessa.todolist.persistence.entity.TodoItemEntity;
 import com.lessa.todolist.persistence.repository.TodoItemRepository;
 import com.lessa.todolist.service.TimeService;
 import com.lessa.todolist.service.TodoService;
+import com.lessa.todolist.service.exception.ConflictException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,8 +22,17 @@ public class TodoServiceImpl implements TodoService {
     private final TimeService timeService;
 
     @Override
-    public TodoItem add(TodoItem item) {
-        return null;
+    public TodoItem add(TodoItem item) throws ConflictException {
+        var currentDate = timeService.getLocalDateTime();
+        if (item.getDueDate().isBefore(currentDate) || item.getDueDate().isEqual(currentDate)) {
+            throw new ConflictException("Cannot add item. Due date is earlier or equal the current date.");
+        }
+
+        item.setStatus(Status.NOT_DONE);
+        item.setCreationDate(timeService.getLocalDateTime());
+
+        var entity = repository.save(TodoItemEntity.toEntity(item));
+        return entity.toDomain();
     }
 
     @Override

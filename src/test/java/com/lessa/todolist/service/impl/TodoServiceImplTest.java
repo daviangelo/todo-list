@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,32 +41,38 @@ class TodoServiceImplTest {
     TodoServiceImpl todoService;
 
     @Test
-    void shouldAddNewItem() {
+    void shouldAddNewItem() throws ConflictException {
         //given
-        var itemToAdd = TodoItem.createNew("description", AFTER_DATE);
-        var itemSaved = new TodoItemEntity(null, "description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, null);
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        var itemToAdd = new TodoItem(null, "description", null, null,  AFTER_DATE, null);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
+        when(repository.save(any())).then(returnsFirstArg());
 
         //when
-        todoService.add(itemToAdd);
+        var result = todoService.add(itemToAdd);
 
         //then
-        verify(timeService, times(1)).get();
-        verify(repository, times(1)).save(itemSaved);
+        verify(timeService, times(1)).getLocalDateTime();
+        verify(repository, times(1)).save(any());
+
+        assertEquals("description", result.getDescription());
+        assertEquals(Status.NOT_DONE, result.getStatus());
+        assertEquals(CURRENT_DATE, result.getCreationDate());
+        assertEquals(AFTER_DATE, result.getDueDate());
+        assertNull(result.getDoneDate());
     }
 
     @Test
     void shouldThrowExceptionWhenAddNewItemWithPastDueDate() {
         //given
-        var itemToAdd = TodoItem.createNew("description", CURRENT_DATE);
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        var itemToAdd = new TodoItem(null, "description", null, null,  CURRENT_DATE, null);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
 
         //when
         var exception = assertThrows(ConflictException.class, () ->
                 todoService.add(itemToAdd));
 
         //then
-        verify(timeService, times(1)).get();
+        verify(timeService, times(1)).getLocalDateTime();
         verify(repository, times(0)).save(any());
         assertEquals("Cannot add item. Due date is earlier or equal the current date.", exception.getMessage());
     }
@@ -78,7 +84,7 @@ class TodoServiceImplTest {
         var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, null);
         var itemUpdated = new TodoItemEntity(itemId, "new description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, null);
 
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(itemToBeUpdated));
 
         //when
@@ -94,7 +100,7 @@ class TodoServiceImplTest {
         //given
         var itemId = UUID.randomUUID();
 
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.empty());
 
         //when
@@ -113,7 +119,7 @@ class TodoServiceImplTest {
         var itemId = UUID.randomUUID();
         var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.PAST_DUE, AFTER_DATE, CURRENT_DATE, null);
 
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(itemToBeUpdated));
 
         //when
@@ -133,7 +139,7 @@ class TodoServiceImplTest {
         var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.NOT_DONE, CURRENT_DATE, CURRENT_DATE, null);
         var itemUpdated = new TodoItemEntity(itemId, "description", Status.PAST_DUE, CURRENT_DATE, CURRENT_DATE, null);
 
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(itemToBeUpdated));
 
         //when
@@ -153,7 +159,7 @@ class TodoServiceImplTest {
         var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, null);
         var itemUpdated = new TodoItemEntity(itemId, "description", Status.DONE, CURRENT_DATE, AFTER_DATE, CURRENT_DATE);
 
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(itemToBeUpdated));
 
         //when
@@ -169,7 +175,7 @@ class TodoServiceImplTest {
         //given
         var itemId = UUID.randomUUID();
 
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.empty());
 
         //when
@@ -188,7 +194,7 @@ class TodoServiceImplTest {
         var itemId = UUID.randomUUID();
         var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.DONE, CURRENT_DATE, AFTER_DATE, CURRENT_DATE);
 
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(itemToBeUpdated));
 
         //when
@@ -207,7 +213,7 @@ class TodoServiceImplTest {
         var itemId = UUID.randomUUID();
         var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.PAST_DUE, AFTER_DATE, CURRENT_DATE, null);
 
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(itemToBeUpdated));
 
         //when
@@ -227,7 +233,7 @@ class TodoServiceImplTest {
         var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.NOT_DONE, AFTER_DATE, CURRENT_DATE, null);
         var itemUpdated = new TodoItemEntity(itemId, "description", Status.PAST_DUE, AFTER_DATE, CURRENT_DATE, null);
 
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(itemToBeUpdated));
 
         //when
@@ -247,7 +253,7 @@ class TodoServiceImplTest {
         var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, CURRENT_DATE);
         var itemUpdated = new TodoItemEntity(itemId, "description", Status.DONE, CURRENT_DATE, AFTER_DATE, null);
 
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(itemToBeUpdated));
 
         //when
@@ -263,7 +269,7 @@ class TodoServiceImplTest {
         //given
         var itemId = UUID.randomUUID();
 
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.empty());
 
         //when
@@ -282,7 +288,7 @@ class TodoServiceImplTest {
         var itemId = UUID.randomUUID();
         var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, CURRENT_DATE);
 
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(itemToBeUpdated));
 
         //when
@@ -301,7 +307,7 @@ class TodoServiceImplTest {
         var itemId = UUID.randomUUID();
         var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.PAST_DUE, AFTER_DATE, CURRENT_DATE, null);
 
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(itemToBeUpdated));
 
         //when
@@ -321,7 +327,7 @@ class TodoServiceImplTest {
         var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.NOT_DONE, AFTER_DATE, CURRENT_DATE, null);
         var itemUpdated = new TodoItemEntity(itemId, "description", Status.PAST_DUE, AFTER_DATE, CURRENT_DATE, null);
 
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(itemToBeUpdated));
 
         //when
@@ -341,7 +347,7 @@ class TodoServiceImplTest {
         var pageRequest = PageRequest.of(0, 1, Sort.by("creationDate").ascending());
         var retrievedPage = new PageImpl<>(List.of(new TodoItemEntity(itemId, "description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, null)));
 
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findAll(pageRequest)).thenReturn(retrievedPage);
 
         //when
@@ -358,7 +364,7 @@ class TodoServiceImplTest {
         var pageRequest = PageRequest.of(0, 1, Sort.by("creationDate").ascending());
         var retrievedPage = new PageImpl<>(List.of(new TodoItemEntity(itemId, "description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, null)));
 
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findAllByStatus(Status.NOT_DONE, pageRequest)).thenReturn(retrievedPage);
 
         //when
@@ -374,7 +380,7 @@ class TodoServiceImplTest {
         var itemId = UUID.randomUUID();
         var item = new TodoItemEntity(itemId, "description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, null);
 
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(item));
 
         //when
@@ -389,7 +395,7 @@ class TodoServiceImplTest {
         //given
         var itemId = UUID.randomUUID();
 
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.empty());
 
         //when
@@ -405,7 +411,7 @@ class TodoServiceImplTest {
     @Test
     void shouldUpdatePastDueItemsStatus() {
         //given
-        when(timeService.get()).thenReturn(CURRENT_DATE);
+        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
 
         //when
         todoService.updatePastDueItemsStatus();
