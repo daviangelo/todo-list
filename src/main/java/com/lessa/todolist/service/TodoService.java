@@ -16,7 +16,7 @@ public interface TodoService {
 
     TodoItem markAsDone(UUID itemId) throws NotFoundException, ConflictException;
 
-    TodoItem markAsNotDone(UUID itemId);
+    TodoItem markAsNotDone(UUID itemId) throws NotFoundException, ConflictException;
 
     Page<TodoItem> getAll(Pageable pageable);
 

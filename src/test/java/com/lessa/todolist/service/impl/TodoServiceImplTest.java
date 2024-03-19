@@ -258,29 +258,33 @@ class TodoServiceImplTest {
     }
 
     @Test
-    void shouldMarkItemAsNotDone() {
+    void shouldMarkItemAsNotDone() throws NotFoundException, ConflictException {
         //given
         var itemId = UUID.randomUUID();
-        var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, CURRENT_DATE);
-        var itemUpdated = new TodoItemEntity(itemId, "description", Status.DONE, CURRENT_DATE, AFTER_DATE, null);
+        var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.DONE, CURRENT_DATE, AFTER_DATE, CURRENT_DATE);
 
         when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(itemToBeUpdated));
+        when(repository.save(any())).then(returnsFirstArg());
 
         //when
-        todoService.markAsNotDone(itemId);
+        var result = todoService.markAsNotDone(itemId);
 
         //then
         verify(repository, times(1)).findById(itemId);
-        verify(repository, times(1)).save(itemUpdated);
+        verify(repository, times(1)).save(any());
+
+        assertEquals("description", result.getDescription());
+        assertEquals(Status.NOT_DONE, result.getStatus());
+        assertEquals(CURRENT_DATE, result.getCreationDate());
+        assertEquals(AFTER_DATE, result.getDueDate());
+        assertNull(result.getDoneDate());
     }
 
     @Test
     void shouldThrowExceptionWhenMarkItemAsNotDoneAndItemNotFoundWithId() {
         //given
         var itemId = UUID.randomUUID();
-
-        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.empty());
 
         //when
@@ -299,7 +303,6 @@ class TodoServiceImplTest {
         var itemId = UUID.randomUUID();
         var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, CURRENT_DATE);
 
-        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(itemToBeUpdated));
 
         //when
@@ -335,11 +338,12 @@ class TodoServiceImplTest {
     void shouldChangeItemStatusToPastDueAndThrowExceptionWhenMarkItemAsNotDone() {
         //given
         var itemId = UUID.randomUUID();
-        var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.NOT_DONE, AFTER_DATE, CURRENT_DATE, null);
-        var itemUpdated = new TodoItemEntity(itemId, "description", Status.PAST_DUE, AFTER_DATE, CURRENT_DATE, null);
+        var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.DONE, AFTER_DATE, CURRENT_DATE, null);
 
         when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(itemToBeUpdated));
+
+        var todoItemEntityWithStatusUpdated = ArgumentCaptor.forClass(TodoItemEntity.class);
 
         //when
         var exception = assertThrows(ConflictException.class, () ->
@@ -347,7 +351,9 @@ class TodoServiceImplTest {
 
         //then
         verify(repository, times(1)).findById(itemId);
-        verify(repository, times(1)).save(itemUpdated);
+        verify(repository, times(1)).save(todoItemEntityWithStatusUpdated.capture());
+
+        assertEquals(Status.PAST_DUE, todoItemEntityWithStatusUpdated.getValue().getStatus());
         assertEquals("Cannot mark the item as not done. The item status is past due.", exception.getMessage());
     }
 
