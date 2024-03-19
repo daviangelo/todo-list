@@ -38,18 +38,10 @@ public class TodoServiceImpl implements TodoService {
 
     @Override
     public TodoItem updateDescription(UUID itemId, String description) throws NotFoundException, ConflictException {
-        var item = repository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Item not found with given id: " + itemId))
-                .toDomain();
+        var item = findItemById(itemId);
 
-        var currentDate = timeService.getLocalDateTime();
-        if (item.getStatus().equals(Status.PAST_DUE)) {
-            throw new ConflictException("Cannot update the description. The item status is past due.");
-        } else if (item.getDueDate().isBefore(currentDate) || item.getDueDate().isEqual(currentDate)) {
-            item.setStatus(Status.PAST_DUE);
-            repository.save(TodoItemEntity.toEntity(item));
-            throw new ConflictException("Cannot update the description. The item status is past due.");
-        }
+        throwConflictExceptionWhenPastDueItem(item,
+                "Cannot update the description. The item status is past due.");
 
         item.setDescription(description);
         var entity = repository.save(TodoItemEntity.toEntity(item));
@@ -58,47 +50,31 @@ public class TodoServiceImpl implements TodoService {
 
     @Override
     public TodoItem markAsDone(UUID itemId) throws NotFoundException, ConflictException {
-        var item = repository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Item not found with given id: " + itemId))
-                .toDomain();
+        var item = findItemById(itemId);
 
         if (item.getStatus() == Status.DONE) {
             throw new ConflictException("The item status is already done.");
         }
 
-        var currentDate = timeService.getLocalDateTime();
-        if (item.getStatus().equals(Status.PAST_DUE)) {
-            throw new ConflictException("Cannot mark the item as done. The item status is past due.");
-        } else if (item.getDueDate().isBefore(currentDate) || item.getDueDate().isEqual(currentDate)) {
-            item.setStatus(Status.PAST_DUE);
-            repository.save(TodoItemEntity.toEntity(item));
-            throw new ConflictException("Cannot mark the item as done. The item status is past due.");
-        }
+        throwConflictExceptionWhenPastDueItem(item,
+                "Cannot mark the item as done. The item status is past due.");
 
         item.setStatus(Status.DONE);
-        item.setDoneDate(currentDate);
+        item.setDoneDate(timeService.getLocalDateTime());
         var entity = repository.save(TodoItemEntity.toEntity(item));
         return entity.toDomain();
     }
 
     @Override
     public TodoItem markAsNotDone(UUID itemId) throws NotFoundException, ConflictException {
-        var item = repository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Item not found with given id: " + itemId))
-                .toDomain();
+        var item = findItemById(itemId);
 
         if (item.getStatus() == Status.NOT_DONE) {
             throw new ConflictException("The item status is already not done.");
         }
 
-        var currentDate = timeService.getLocalDateTime();
-        if (item.getStatus().equals(Status.PAST_DUE)) {
-            throw new ConflictException("Cannot mark the item as not done. The item status is past due.");
-        } else if (item.getDueDate().isBefore(currentDate) || item.getDueDate().isEqual(currentDate)) {
-            item.setStatus(Status.PAST_DUE);
-            repository.save(TodoItemEntity.toEntity(item));
-            throw new ConflictException("Cannot mark the item as not done. The item status is past due.");
-        }
+        throwConflictExceptionWhenPastDueItem(item,
+                "Cannot mark the item as not done. The item status is past due.");
 
         item.setStatus(Status.NOT_DONE);
         item.setDoneDate(null);
@@ -118,13 +94,29 @@ public class TodoServiceImpl implements TodoService {
 
     @Override
     public TodoItem get(UUID itemId) throws NotFoundException {
-        return repository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Item not found with given id: " + itemId))
-                .toDomain();
+        return findItemById(itemId);
     }
 
     @Override
     public void updatePastDueItemsStatus() {
         repository.updatePastDueItemsStatus(timeService.getLocalDateTime());
+    }
+
+    private TodoItem findItemById(UUID itemId) throws NotFoundException {
+        return repository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Item not found with given id: " + itemId))
+                .toDomain();
+    }
+
+    private void throwConflictExceptionWhenPastDueItem(TodoItem item, String conflictMessage) throws ConflictException {
+        var currentDate = timeService.getLocalDateTime();
+
+        if (item.getStatus().equals(Status.PAST_DUE)) {
+            throw new ConflictException(conflictMessage);
+        } else if (item.getDueDate().isBefore(currentDate) || item.getDueDate().isEqual(currentDate)) {
+            item.setStatus(Status.PAST_DUE);
+            repository.save(TodoItemEntity.toEntity(item));
+            throw new ConflictException(conflictMessage);
+        }
     }
 }
