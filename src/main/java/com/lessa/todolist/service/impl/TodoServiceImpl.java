@@ -125,6 +125,6 @@ public class TodoServiceImpl implements TodoService {
 
     @Override
     public void updatePastDueItemsStatus() {
-
+        repository.updatePastDueItemsStatus(timeService.getLocalDateTime());
     }
 }
