@@ -362,9 +362,8 @@ class TodoServiceImplTest {
         //given
         var itemId = UUID.randomUUID();
         var pageRequest = PageRequest.of(0, 1, Sort.by("creationDate").ascending());
-        var retrievedPage = new PageImpl<>(List.of(new TodoItemEntity(itemId, "description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, null)));
+        var retrievedPage = new PageImpl<>(List.of(new TodoItemEntity()));
 
-        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findAll(pageRequest)).thenReturn(retrievedPage);
 
         //when

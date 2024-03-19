@@ -108,7 +108,7 @@ public class TodoServiceImpl implements TodoService {
 
     @Override
     public Page<TodoItem> getAll(Pageable pageable) {
-        return null;
+        return repository.findAll(pageable).map(TodoItemEntity::toDomain);
     }
 
     @Override
