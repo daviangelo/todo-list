@@ -388,33 +388,34 @@ class TodoServiceImplTest {
     }
 
     @Test
-    void shouldGetItem() {
+    void shouldGetItem() throws NotFoundException {
         //given
         var itemId = UUID.randomUUID();
-        var item = new TodoItemEntity(itemId, "description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, null);
+        var item = new TodoItemEntity(itemId, "description", Status.DONE, CURRENT_DATE, AFTER_DATE, CURRENT_DATE);
 
-        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(item));
 
         //when
-        todoService.get(itemId);
+       var result = todoService.get(itemId);
 
         //then
         verify(repository, times(1)).findById(itemId);
+        assertEquals("description", result.getDescription());
+        assertEquals(Status.DONE, result.getStatus());
+        assertEquals(CURRENT_DATE, result.getCreationDate());
+        assertEquals(AFTER_DATE, result.getDueDate());
+        assertEquals(CURRENT_DATE, result.getDoneDate());
     }
 
     @Test
     void shouldThrowExceptionWhenGetItemAndItemIdNotFound() {
         //given
         var itemId = UUID.randomUUID();
-
-        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.empty());
 
         //when
         var exception = assertThrows(NotFoundException.class, ()->
                 todoService.get(itemId));
-
 
         //then
         verify(repository, times(1)).findById(itemId);

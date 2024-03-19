@@ -22,7 +22,7 @@ public interface TodoService {
 
     Page<TodoItem> getNotDone(Pageable pageable);
 
-    TodoItem get(UUID itemId);
+    TodoItem get(UUID itemId) throws NotFoundException;
 
     void updatePastDueItemsStatus();
 

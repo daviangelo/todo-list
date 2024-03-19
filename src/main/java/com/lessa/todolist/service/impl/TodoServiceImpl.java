@@ -117,8 +117,10 @@ public class TodoServiceImpl implements TodoService {
     }
 
     @Override
-    public TodoItem get(UUID itemId) {
-        return null;
+    public TodoItem get(UUID itemId) throws NotFoundException {
+        return repository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Item not found with given id: " + itemId))
+                .toDomain();
     }
 
     @Override
