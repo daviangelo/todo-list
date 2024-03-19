@@ -14,7 +14,7 @@ public interface TodoService {
 
     TodoItem updateDescription(UUID itemId, String description) throws NotFoundException, ConflictException;
 
-    TodoItem markAsDone(UUID itemId);
+    TodoItem markAsDone(UUID itemId) throws NotFoundException, ConflictException;
 
     TodoItem markAsNotDone(UUID itemId);
 
