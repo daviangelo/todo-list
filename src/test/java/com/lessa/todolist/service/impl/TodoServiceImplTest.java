@@ -9,6 +9,7 @@ import com.lessa.todolist.service.exception.ConflictException;
 import com.lessa.todolist.service.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -78,29 +79,33 @@ class TodoServiceImplTest {
     }
 
     @Test
-    void shouldChangeDescription() {
+    void shouldChangeDescription() throws NotFoundException, ConflictException{
         //given
         var itemId = UUID.randomUUID();
         var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, null);
-        var itemUpdated = new TodoItemEntity(itemId, "new description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, null);
 
         when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(itemToBeUpdated));
+        when(repository.save(any())).then(returnsFirstArg());
 
         //when
-        todoService.updateDescription(itemId,"new description");
+        var result = todoService.updateDescription(itemId,"new description");
 
         //then
         verify(repository, times(1)).findById(itemId);
-        verify(repository, times(1)).save(itemUpdated);
+        verify(repository, times(1)).save(any());
+
+        assertEquals("new description", result.getDescription());
+        assertEquals(Status.NOT_DONE, result.getStatus());
+        assertEquals(CURRENT_DATE, result.getCreationDate());
+        assertEquals(AFTER_DATE, result.getDueDate());
+        assertNull(result.getDoneDate());
     }
 
     @Test
     void shouldThrowExceptionWhenChangeDescriptionAndItemIdNotFound() {
         //given
         var itemId = UUID.randomUUID();
-
-        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.empty());
 
         //when
@@ -118,8 +123,6 @@ class TodoServiceImplTest {
         //given
         var itemId = UUID.randomUUID();
         var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.PAST_DUE, AFTER_DATE, CURRENT_DATE, null);
-
-        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(itemToBeUpdated));
 
         //when
@@ -137,10 +140,10 @@ class TodoServiceImplTest {
         //given
         var itemId = UUID.randomUUID();
         var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.NOT_DONE, CURRENT_DATE, CURRENT_DATE, null);
-        var itemUpdated = new TodoItemEntity(itemId, "description", Status.PAST_DUE, CURRENT_DATE, CURRENT_DATE, null);
-
         when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(itemToBeUpdated));
+
+        var todoItemEntityWithStatusUpdated = ArgumentCaptor.forClass(TodoItemEntity.class);
 
         //when
         var exception = assertThrows(ConflictException.class, () ->
@@ -148,7 +151,9 @@ class TodoServiceImplTest {
 
         //then
         verify(repository, times(1)).findById(itemId);
-        verify(repository, times(1)).save(itemUpdated);
+        verify(repository, times(1)).save(todoItemEntityWithStatusUpdated.capture());
+
+        assertEquals(Status.PAST_DUE, todoItemEntityWithStatusUpdated.getValue().getStatus());
         assertEquals("Cannot update the description. The item status is past due.", exception.getMessage());
     }
 

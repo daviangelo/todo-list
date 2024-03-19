@@ -2,6 +2,7 @@ package com.lessa.todolist.service;
 
 import com.lessa.todolist.domain.TodoItem;
 import com.lessa.todolist.service.exception.ConflictException;
+import com.lessa.todolist.service.exception.NotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -11,7 +12,7 @@ public interface TodoService {
 
     TodoItem add(TodoItem item) throws ConflictException;
 
-    TodoItem updateDescription(UUID itemId, String description);
+    TodoItem updateDescription(UUID itemId, String description) throws NotFoundException, ConflictException;
 
     TodoItem markAsDone(UUID itemId);
 
