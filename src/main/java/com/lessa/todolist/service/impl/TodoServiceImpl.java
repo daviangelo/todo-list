@@ -113,7 +113,7 @@ public class TodoServiceImpl implements TodoService {
 
     @Override
     public Page<TodoItem> getNotDone(Pageable pageable) {
-        return null;
+        return repository.findAllByStatus(Status.NOT_DONE, pageable).map(TodoItemEntity::toDomain);
     }
 
     @Override

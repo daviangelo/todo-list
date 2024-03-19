@@ -360,7 +360,6 @@ class TodoServiceImplTest {
     @Test
     void shouldGetAllItems() {
         //given
-        var itemId = UUID.randomUUID();
         var pageRequest = PageRequest.of(0, 1, Sort.by("creationDate").ascending());
         var retrievedPage = new PageImpl<>(List.of(new TodoItemEntity()));
 
@@ -376,11 +375,9 @@ class TodoServiceImplTest {
     @Test
     void shouldGetAllNotDoneItems() {
         //given
-        var itemId = UUID.randomUUID();
         var pageRequest = PageRequest.of(0, 1, Sort.by("creationDate").ascending());
-        var retrievedPage = new PageImpl<>(List.of(new TodoItemEntity(itemId, "description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, null)));
+        var retrievedPage = new PageImpl<>(List.of(new TodoItemEntity()));
 
-        when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findAllByStatus(Status.NOT_DONE, pageRequest)).thenReturn(retrievedPage);
 
         //when
