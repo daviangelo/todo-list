@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -156,11 +157,11 @@ class TodoControllerTest {
         var dto = new ChangeDescriptionDto();
         dto.setDescription("new description");
 
-        var id = UUID.randomUUID();
-        var expectedResponseBody = "Item not found with given id: " + id;
+        var itemId = UUID.randomUUID();
+        var expectedResponseBody = "Item not found with given id: " + itemId;
 
         //when
-        var responseEntity = restTemplate.exchange(createUrlWithPort("/todos/" + id), HttpMethod.PUT,
+        var responseEntity = restTemplate.exchange(createUrlWithPort("/todos/" + itemId), HttpMethod.PUT,
                 new HttpEntity<>(dto), String.class);
 
         //then
@@ -244,11 +245,11 @@ class TodoControllerTest {
     @Test
     void shouldFailWhenMarkItemAsDoneAndItemNotFoundWithId() {
         //given
-        var id = UUID.randomUUID();
-        var expectedResponseBody = "Item not found with given id: " + id;
+        var itemId = UUID.randomUUID();
+        var expectedResponseBody = "Item not found with given id: " + itemId;
 
         //when
-        var responseEntity = restTemplate.exchange(createUrlWithPort("/todos/" + id + "/done"), HttpMethod.PUT,
+        var responseEntity = restTemplate.exchange(createUrlWithPort("/todos/" + itemId + "/done"), HttpMethod.PUT,
                 HttpEntity.EMPTY, String.class);
 
         //then
@@ -301,7 +302,7 @@ class TodoControllerTest {
     }
 
     @Test
-    void shouldChangeItemStatusToPastDueAndFailWhenMarkItemAsDone() {
+    void shouldFailWhenNotDoneItemDueDateHasPassedAndMarkItemAsDone() {
         //given
         var itemId = saveItem("description", Status.NOT_DONE, AFTER_DATE, CURRENT_DATE, null);
         var expectedResponseBody = "Cannot mark the item as done. The item due date has passed.";
@@ -352,11 +353,11 @@ class TodoControllerTest {
     @Test
     void shouldFailWhenMarkItemAsNotDoneAndItemNotFoundWithId() {
         //given
-        var id = UUID.randomUUID();
-        var expectedResponseBody = "Item not found with given id: " + id;
+        var itemId = UUID.randomUUID();
+        var expectedResponseBody = "Item not found with given id: " + itemId;
 
         //when
-        var responseEntity = restTemplate.exchange(createUrlWithPort("/todos/" + id + "/not-done"), HttpMethod.PUT,
+        var responseEntity = restTemplate.exchange(createUrlWithPort("/todos/" + itemId + "/not-done"), HttpMethod.PUT,
                 HttpEntity.EMPTY, String.class);
 
         //then
@@ -471,7 +472,32 @@ class TodoControllerTest {
         assertEquals("b", responseBody.getContent().get(1).getDescription());
     }
 
+    @Test
+    void shouldGetItem() {
+        //given
+        var itemId = saveItem("description", Status.DONE,CURRENT_DATE, AFTER_DATE, CURRENT_DATE);
 
+        //when
+        var responseEntity = restTemplate.getForEntity(createUrlWithPort("/todos/" + itemId), TodoItemDto.class);
+
+        //then
+        var responseBody = responseEntity.getBody();
+        assertThat(responseBody).hasNoNullFieldsOrProperties();
+    }
+
+    @Test
+    void shouldFailGetItemWhenItemNotFoundWithId() {
+        //given
+        var itemId = UUID.randomUUID();
+        var expectedResponseBody = "Item not found with given id: " + itemId;
+
+        //when
+        var responseEntity = restTemplate.getForEntity(createUrlWithPort("/todos/" + itemId), String.class);
+
+        //then
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+        assertEquals(expectedResponseBody, responseEntity.getBody());
+    }
 
     private UUID saveItem(String description, Status status, LocalDateTime creationDate, LocalDateTime dueDate,
                           LocalDateTime doneDate) {
