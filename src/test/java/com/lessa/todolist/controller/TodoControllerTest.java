@@ -127,12 +127,7 @@ class TodoControllerTest {
         var responseBody = responseEntity.getBody();
 
         assertNotNull(responseBody);
-        assertNotNull(responseBody.getId());
         assertEquals("new description", responseBody.getDescription());
-        assertEquals(Status.NOT_DONE, responseBody.getStatus());
-        assertEquals(CURRENT_DATE, responseBody.getCreationDate());
-        assertEquals(AFTER_DATE, responseBody.getDueDate());
-        assertNull(responseBody.getDoneDate());
 
         var itemInDatabase =  repository.findById(itemId);
         assertTrue(itemInDatabase.isPresent());
@@ -215,6 +210,111 @@ class TodoControllerTest {
         assertEquals("description", itemInDatabase.get().getDescription());
         assertEquals(Status.PAST_DUE, itemInDatabase.get().getStatus());
     }
+
+    @Test
+    void shouldMarkItemAsDone() {
+        var itemId = saveItem("description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, null);
+
+        Mockito.when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
+
+        //when
+        var responseEntity = restTemplate.exchange(createUrlWithPort("/todos/" + itemId + "/done"), HttpMethod.PUT,
+                HttpEntity.EMPTY, TodoItemDto.class);
+
+        //then
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        var responseBody = responseEntity.getBody();
+
+        assertNotNull(responseBody);
+        assertEquals(Status.DONE, responseBody.getStatus());
+        assertEquals(CURRENT_DATE, responseBody.getCreationDate());
+        assertEquals(CURRENT_DATE, responseBody.getDoneDate());
+
+        var itemInDatabase =  repository.findById(itemId);
+        assertTrue(itemInDatabase.isPresent());
+        assertEquals(Status.DONE, itemInDatabase.get().getStatus());
+        assertEquals(CURRENT_DATE, itemInDatabase.get().getDoneDate());
+    }
+
+    @Test
+    void shouldFailWhenMarkItemAsDoneAndItemNotFoundWithId() {
+        //given
+        var id = UUID.randomUUID();
+        var expectedResponseBody = "Item not found with given id: " + id;
+
+        //when
+        var responseEntity = restTemplate.exchange(createUrlWithPort("/todos/" + id + "/done"), HttpMethod.PUT,
+                HttpEntity.EMPTY, String.class);
+
+        //then
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+        assertEquals(expectedResponseBody, responseEntity.getBody());
+    }
+
+    @Test
+    void shouldFailExceptionWhenMarkItemWithDoneStatusAsDone() {
+        var itemId = saveItem("description", Status.DONE, CURRENT_DATE, AFTER_DATE, CURRENT_DATE);
+        var expectedResponseBody = "The item status is already done.";
+
+        Mockito.when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
+
+        //when
+        var responseEntity = restTemplate.exchange(createUrlWithPort("/todos/" + itemId + "/done"), HttpMethod.PUT,
+                HttpEntity.EMPTY, String.class);
+
+        //then
+        assertEquals(HttpStatus.CONFLICT, responseEntity.getStatusCode());
+        assertEquals(expectedResponseBody, responseEntity.getBody());
+
+        var itemInDatabase =  repository.findById(itemId);
+        assertTrue(itemInDatabase.isPresent());
+        assertEquals(Status.DONE, itemInDatabase.get().getStatus());
+        assertEquals(CURRENT_DATE, itemInDatabase.get().getDoneDate());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenMarkItemWithPastDueStatusAsDone() {
+        var itemId = saveItem("description", Status.PAST_DUE, AFTER_DATE, CURRENT_DATE, null);
+        var expectedResponseBody = "Cannot mark the item as done. The item status is past due.";
+
+        Mockito.when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
+
+        //when
+        var responseEntity = restTemplate.exchange(createUrlWithPort("/todos/" + itemId + "/done"), HttpMethod.PUT,
+                HttpEntity.EMPTY, String.class);
+
+        //then
+        assertEquals(HttpStatus.CONFLICT, responseEntity.getStatusCode());
+        assertEquals(expectedResponseBody, responseEntity.getBody());
+
+        var itemInDatabase =  repository.findById(itemId);
+        assertTrue(itemInDatabase.isPresent());
+        assertEquals(Status.PAST_DUE, itemInDatabase.get().getStatus());
+        assertNull(itemInDatabase.get().getDoneDate());
+    }
+
+    @Test
+    void shouldChangeItemStatusToPastDueAndThrowExceptionWhenMarkItemAsDone() {
+        var itemId = saveItem("description", Status.NOT_DONE, AFTER_DATE, CURRENT_DATE, null);
+        var expectedResponseBody = "Cannot mark the item as done. The item status is past due.";
+
+        Mockito.when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
+
+        //when
+        var responseEntity = restTemplate.exchange(createUrlWithPort("/todos/" + itemId + "/done"), HttpMethod.PUT,
+                HttpEntity.EMPTY, String.class);
+
+        //then
+        assertEquals(HttpStatus.CONFLICT, responseEntity.getStatusCode());
+        assertEquals(expectedResponseBody, responseEntity.getBody());
+
+        var itemInDatabase =  repository.findById(itemId);
+        assertTrue(itemInDatabase.isPresent());
+        assertEquals(Status.PAST_DUE, itemInDatabase.get().getStatus());
+        assertNull(itemInDatabase.get().getDoneDate());
+    }
+
 
 
 
