@@ -231,7 +231,7 @@ class TodoServiceImplTest {
         //then
         verify(repository, times(1)).findById(itemId);
         verify(repository, times(0)).save(any());
-        assertEquals("Cannot mark the item as done. The item status is past due.", exception.getMessage());
+        assertEquals("Cannot mark the item as done. The item due date has passed.", exception.getMessage());
     }
 
     @Test
@@ -254,7 +254,7 @@ class TodoServiceImplTest {
         verify(repository, times(1)).save(todoItemEntityWithStatusUpdated.capture());
 
         assertEquals(Status.PAST_DUE, todoItemEntityWithStatusUpdated.getValue().getStatus());
-        assertEquals("Cannot mark the item as done. The item status is past due.", exception.getMessage());
+        assertEquals("Cannot mark the item as done. The item due date has passed.", exception.getMessage());
     }
 
     @Test
@@ -331,7 +331,7 @@ class TodoServiceImplTest {
         //then
         verify(repository, times(1)).findById(itemId);
         verify(repository, times(0)).save(any());
-        assertEquals("Cannot mark the item as not done. The item status is past due.", exception.getMessage());
+        assertEquals("Cannot mark the item as not done. The item due date has passed.", exception.getMessage());
     }
 
     @Test
@@ -343,18 +343,13 @@ class TodoServiceImplTest {
         when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.findById(itemId)).thenReturn(Optional.of(itemToBeUpdated));
 
-        var todoItemEntityWithStatusUpdated = ArgumentCaptor.forClass(TodoItemEntity.class);
-
         //when
         var exception = assertThrows(ConflictException.class, () ->
                 todoService.markAsNotDone(itemId));
 
         //then
         verify(repository, times(1)).findById(itemId);
-        verify(repository, times(1)).save(todoItemEntityWithStatusUpdated.capture());
-
-        assertEquals(Status.PAST_DUE, todoItemEntityWithStatusUpdated.getValue().getStatus());
-        assertEquals("Cannot mark the item as not done. The item status is past due.", exception.getMessage());
+        assertEquals("Cannot mark the item as not done. The item due date has passed.", exception.getMessage());
     }
 
     @Test

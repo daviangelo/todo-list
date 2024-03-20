@@ -60,7 +60,7 @@ public class TodoServiceImpl implements TodoService {
         }
 
         throwConflictExceptionWhenPastDueItem(item,
-                "Cannot mark the item as done. The item status is past due.");
+                "Cannot mark the item as done. The item due date has passed.");
 
         item.setStatus(Status.DONE);
         item.setDoneDate(timeService.getLocalDateTime());
@@ -78,7 +78,7 @@ public class TodoServiceImpl implements TodoService {
         }
 
         throwConflictExceptionWhenPastDueItem(item,
-                "Cannot mark the item as not done. The item status is past due.");
+                "Cannot mark the item as not done. The item due date has passed.");
 
         item.setStatus(Status.NOT_DONE);
         item.setDoneDate(null);
@@ -115,12 +115,18 @@ public class TodoServiceImpl implements TodoService {
     private void throwConflictExceptionWhenPastDueItem(TodoItem item, String conflictMessage) throws ConflictException {
         var currentDate = timeService.getLocalDateTime();
 
-        if (item.getStatus().equals(Status.PAST_DUE)) {
-            throw new ConflictException(conflictMessage);
-        } else if (item.getDueDate().isBefore(currentDate) || item.getDueDate().isEqual(currentDate)) {
-            item.setStatus(Status.PAST_DUE);
-            repository.save(TodoItemEntity.toEntity(item));
+        if (item.getStatus().equals(Status.PAST_DUE) || item.getDueDate().isBefore(currentDate) ||
+                item.getDueDate().isEqual(currentDate)) {
+            updateNotDoneToPastDue(item);
             throw new ConflictException(conflictMessage);
         }
     }
+
+    private void updateNotDoneToPastDue(TodoItem item) {
+        if (item.getStatus() == Status.NOT_DONE) {
+            item.setStatus(Status.PAST_DUE);
+            repository.save(TodoItemEntity.toEntity(item));
+        }
+    }
+
 }
