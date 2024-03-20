@@ -149,7 +149,7 @@ class TodoControllerTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenChangeDescriptionAndItemIdNotFound() {
+    void shouldFailWhenChangeDescriptionAndItemIdNotFound() {
         //given
         var dto = new ChangeDescriptionDto();
         dto.setDescription("new description");
@@ -253,7 +253,7 @@ class TodoControllerTest {
     }
 
     @Test
-    void shouldFailExceptionWhenMarkItemWithDoneStatusAsDone() {
+    void shouldFailWhenMarkItemWithDoneStatusAsDone() {
         var itemId = saveItem("description", Status.DONE, CURRENT_DATE, AFTER_DATE, CURRENT_DATE);
         var expectedResponseBody = "The item status is already done.";
 
@@ -274,7 +274,7 @@ class TodoControllerTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenMarkItemWithPastDueStatusAsDone() {
+    void shouldFailWhenMarkItemWithPastDueStatusAsDone() {
         var itemId = saveItem("description", Status.PAST_DUE, AFTER_DATE, CURRENT_DATE, null);
         var expectedResponseBody = "Cannot mark the item as done. The item status is past due.";
 
@@ -295,7 +295,7 @@ class TodoControllerTest {
     }
 
     @Test
-    void shouldChangeItemStatusToPastDueAndThrowExceptionWhenMarkItemAsDone() {
+    void shouldChangeItemStatusToPastDueAndFailWhenMarkItemAsDone() {
         var itemId = saveItem("description", Status.NOT_DONE, AFTER_DATE, CURRENT_DATE, null);
         var expectedResponseBody = "Cannot mark the item as done. The item status is past due.";
 
