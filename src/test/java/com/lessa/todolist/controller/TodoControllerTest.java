@@ -450,6 +450,27 @@ class TodoControllerTest {
         assertEquals("a", responseBody.getContent().get(1).getDescription());
     }
 
+    @Test
+    void shouldGetAllNotDoneItems() {
+        //given
+        saveItem("a", Status.DONE,CURRENT_DATE, AFTER_DATE, CURRENT_DATE);
+        saveItem("b", Status.NOT_DONE,CURRENT_DATE, AFTER_DATE, null);
+        saveItem("c", Status.NOT_DONE,CURRENT_DATE, AFTER_DATE, null);
+
+        //when
+        var responseEntity = restTemplate.exchange(createUrlWithPort("/todos/not-done?page=0&size=2&sort=description,DESC"),
+                HttpMethod.GET, HttpEntity.EMPTY, new ParameterizedTypeReference<RestResponsePage<TodoItemDto>>() {});
+
+        //then
+        var responseBody = responseEntity.getBody();
+        assertNotNull(responseBody);
+        assertEquals(2, responseBody.getPageable().getPageSize());
+        assertEquals(0, responseBody.getPageable().getPageNumber());
+
+        assertEquals("c", responseBody.getContent().get(0).getDescription());
+        assertEquals("b", responseBody.getContent().get(1).getDescription());
+    }
+
 
 
     private UUID saveItem(String description, Status status, LocalDateTime creationDate, LocalDateTime dueDate,
