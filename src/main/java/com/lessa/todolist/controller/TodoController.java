@@ -59,6 +59,12 @@ public class TodoController {
         return ResponseEntity.ok(page);
     }
 
+    @GetMapping("/todos/{id}")
+    public ResponseEntity<TodoItemDto> get(@PathVariable UUID id) throws NotFoundException {
+        var domain = service.get(id);
+        return ResponseEntity.ok(TodoItemDto.fromDomain(domain));
+    }
+
     private Page<TodoItemDto> toPageDto(Page<TodoItem> pageDomain) {
         return pageDomain.map(TodoItemDto::fromDomain);
     }
