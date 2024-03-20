@@ -38,4 +38,10 @@ public class TodoController {
         return ResponseEntity.ok(TodoItemDto.fromDomain(domain));
     }
 
+    @PutMapping("/todos/{id}/not-done")
+    public ResponseEntity<TodoItemDto> markItemAsNotDone(@PathVariable UUID id) throws ConflictException, NotFoundException {
+        var domain = service.markAsNotDone(id);
+        return ResponseEntity.ok(TodoItemDto.fromDomain(domain));
+    }
+
 }
