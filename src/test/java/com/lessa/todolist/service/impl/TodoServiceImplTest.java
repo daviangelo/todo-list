@@ -235,7 +235,7 @@ class TodoServiceImplTest {
     }
 
     @Test
-    void shouldChangeItemStatusToPastDueAndThrowExceptionWhenMarkItemAsDone() {
+    void shouldThrowExceptionWhenNotDoneItemDueDateHasPassedAndMarkItemAsDone() {
         //given
         var itemId = UUID.randomUUID();
         var itemToBeUpdated = new TodoItemEntity(itemId, "description", Status.NOT_DONE, AFTER_DATE, CURRENT_DATE, null);
