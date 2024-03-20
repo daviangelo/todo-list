@@ -44,7 +44,7 @@ class TodoServiceImplTest {
     @Test
     void shouldAddNewItem() throws ConflictException {
         //given
-        var itemToAdd = new TodoItem(null, "description", null, null,  AFTER_DATE, null);
+        var itemToAdd =  TodoItem.createNew( "description",  AFTER_DATE);
         when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
         when(repository.save(any())).then(returnsFirstArg());
 
@@ -65,7 +65,7 @@ class TodoServiceImplTest {
     @Test
     void shouldThrowExceptionWhenAddNewItemWithPastDueDate() {
         //given
-        var itemToAdd = new TodoItem(null, "description", null, null,  CURRENT_DATE, null);
+        var itemToAdd = TodoItem.createNew( "description",  CURRENT_DATE);
         when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
 
         //when
