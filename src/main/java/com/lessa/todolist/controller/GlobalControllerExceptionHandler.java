@@ -14,7 +14,7 @@ import java.util.Map;
 
 @Slf4j
 @ControllerAdvice
-public class GlobalExceptionHandler {
+public class GlobalControllerExceptionHandler {
 
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<String> handleConflictException(ConflictException exception) {
