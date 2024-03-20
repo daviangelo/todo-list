@@ -48,8 +48,14 @@ public class TodoController {
         return ResponseEntity.ok(TodoItemDto.fromDomain(domain));
     }
     @GetMapping("/todos")
-    public ResponseEntity<Page<TodoItemDto>> getUsers(@PageableDefault(size = 12) Pageable pageable) {
+    public ResponseEntity<Page<TodoItemDto>> getAll(@PageableDefault(size = 12) Pageable pageable) {
         var page = toPageDto(service.getAll(pageable));
+        return ResponseEntity.ok(page);
+    }
+
+    @GetMapping("/todos/not-done")
+    public ResponseEntity<Page<TodoItemDto>> getAllNotDone(@PageableDefault(size = 12) Pageable pageable) {
+        var page = toPageDto(service.getNotDone(pageable));
         return ResponseEntity.ok(page);
     }
 
