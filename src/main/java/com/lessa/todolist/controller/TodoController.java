@@ -1,5 +1,6 @@
 package com.lessa.todolist.controller;
 
+import com.lessa.todolist.domain.TodoItem;
 import com.lessa.todolist.dto.ChangeDescriptionDto;
 import com.lessa.todolist.dto.CreateItemDto;
 import com.lessa.todolist.dto.TodoItemDto;
@@ -8,6 +9,9 @@ import com.lessa.todolist.service.exception.ConflictException;
 import com.lessa.todolist.service.exception.NotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,5 +47,15 @@ public class TodoController {
         var domain = service.markAsNotDone(id);
         return ResponseEntity.ok(TodoItemDto.fromDomain(domain));
     }
+    @GetMapping("/todos")
+    public ResponseEntity<Page<TodoItemDto>> getUsers(@PageableDefault(size = 12) Pageable pageable) {
+        var page = toPageDto(service.getAll(pageable));
+        return ResponseEntity.ok(page);
+    }
+
+    private Page<TodoItemDto> toPageDto(Page<TodoItem> pageDomain) {
+        return pageDomain.map(TodoItemDto::fromDomain);
+    }
+
 
 }

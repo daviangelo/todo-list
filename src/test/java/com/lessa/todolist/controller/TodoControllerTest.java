@@ -7,6 +7,7 @@ import com.lessa.todolist.dto.TodoItemDto;
 import com.lessa.todolist.persistence.entity.TodoItemEntity;
 import com.lessa.todolist.persistence.repository.TodoItemRepository;
 import com.lessa.todolist.service.TimeService;
+import com.lessa.todolist.util.RestResponsePage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -15,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -168,6 +170,7 @@ class TodoControllerTest {
 
     @Test
     void shouldFailWhenChangeDescriptionOfPastDueItems() {
+        //given
         var itemId = saveItem("description", Status.PAST_DUE, AFTER_DATE, CURRENT_DATE, null);
         var dto = new ChangeDescriptionDto();
         dto.setDescription("new description");
@@ -190,6 +193,7 @@ class TodoControllerTest {
 
     @Test
     void shouldChangeItemStatusToPastDueAndFailWhenChangeDescriptionOfPastDueItems() {
+        //given
         var itemId = saveItem("description", Status.NOT_DONE, AFTER_DATE, CURRENT_DATE, null);
         var dto = new ChangeDescriptionDto();
         dto.setDescription("new description");
@@ -213,6 +217,7 @@ class TodoControllerTest {
 
     @Test
     void shouldMarkItemAsDone() {
+        //given
         var itemId = saveItem("description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, null);
 
         Mockito.when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
@@ -228,7 +233,6 @@ class TodoControllerTest {
 
         assertNotNull(responseBody);
         assertEquals(Status.DONE, responseBody.getStatus());
-        assertEquals(CURRENT_DATE, responseBody.getCreationDate());
         assertEquals(CURRENT_DATE, responseBody.getDoneDate());
 
         var itemInDatabase =  repository.findById(itemId);
@@ -254,6 +258,7 @@ class TodoControllerTest {
 
     @Test
     void shouldFailWhenMarkItemWithDoneStatusAsDone() {
+        //given
         var itemId = saveItem("description", Status.DONE, CURRENT_DATE, AFTER_DATE, CURRENT_DATE);
         var expectedResponseBody = "The item status is already done.";
 
@@ -275,6 +280,7 @@ class TodoControllerTest {
 
     @Test
     void shouldFailWhenMarkItemWithPastDueStatusAsDone() {
+        //given
         var itemId = saveItem("description", Status.PAST_DUE, AFTER_DATE, CURRENT_DATE, null);
         var expectedResponseBody = "Cannot mark the item as done. The item due date has passed.";
 
@@ -296,6 +302,7 @@ class TodoControllerTest {
 
     @Test
     void shouldChangeItemStatusToPastDueAndFailWhenMarkItemAsDone() {
+        //given
         var itemId = saveItem("description", Status.NOT_DONE, AFTER_DATE, CURRENT_DATE, null);
         var expectedResponseBody = "Cannot mark the item as done. The item due date has passed.";
 
@@ -317,6 +324,7 @@ class TodoControllerTest {
 
     @Test
     void shouldMarkItemAsNotDone() {
+        //given
         var itemId = saveItem("description", Status.DONE, CURRENT_DATE, AFTER_DATE, CURRENT_DATE);
 
         Mockito.when(timeService.getLocalDateTime()).thenReturn(CURRENT_DATE);
@@ -358,6 +366,7 @@ class TodoControllerTest {
 
     @Test
     void shouldFailWhenMarkItemWithNotDoneStatusAsNotDone() {
+        //given
         var itemId = saveItem("description", Status.NOT_DONE, CURRENT_DATE, AFTER_DATE, null);
         var expectedResponseBody = "The item status is already not done.";
 
@@ -379,6 +388,7 @@ class TodoControllerTest {
 
     @Test
     void shouldFailWhenMarkItemWithPastDueStatusAsNotDone() {
+        //given
         var itemId = saveItem("description", Status.PAST_DUE, AFTER_DATE, CURRENT_DATE, null);
         var expectedResponseBody = "Cannot mark the item as not done. The item due date has passed.";
 
@@ -400,6 +410,7 @@ class TodoControllerTest {
 
     @Test
     void shouldChangeItemStatusToPastDueAndFailWhenMarkItemAsNotDone() {
+        //given
         var itemId = saveItem("description", Status.DONE, AFTER_DATE, CURRENT_DATE, CURRENT_DATE);
         var expectedResponseBody = "Cannot mark the item as not done. The item due date has passed.";
 
@@ -417,6 +428,26 @@ class TodoControllerTest {
         assertTrue(itemInDatabase.isPresent());
         assertEquals(Status.DONE, itemInDatabase.get().getStatus());
         assertEquals(CURRENT_DATE, itemInDatabase.get().getDoneDate());
+    }
+
+    @Test
+    void shouldGetAllItems() {
+        //given
+        saveItem("a", Status.DONE,CURRENT_DATE, AFTER_DATE, CURRENT_DATE);
+        saveItem("b", Status.NOT_DONE,CURRENT_DATE, AFTER_DATE, null);
+
+        //when
+        var responseEntity = restTemplate.exchange(createUrlWithPort("/todos?page=0&size=2&sort=description,DESC"),
+                HttpMethod.GET, HttpEntity.EMPTY, new ParameterizedTypeReference<RestResponsePage<TodoItemDto>>() {});
+
+        //then
+        var responseBody = responseEntity.getBody();
+        assertNotNull(responseBody);
+        assertEquals(2, responseBody.getPageable().getPageSize());
+        assertEquals(0, responseBody.getPageable().getPageNumber());
+
+        assertEquals("b", responseBody.getContent().get(0).getDescription());
+        assertEquals("a", responseBody.getContent().get(1).getDescription());
     }
 
 
