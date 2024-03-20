@@ -32,4 +32,10 @@ public class TodoController {
         return ResponseEntity.ok(TodoItemDto.fromDomain(domain));
     }
 
+    @PutMapping("/todos/{id}/done")
+    public ResponseEntity<TodoItemDto> markItemAsDone(@PathVariable UUID id) throws ConflictException, NotFoundException {
+        var domain = service.markAsDone(id);
+        return ResponseEntity.ok(TodoItemDto.fromDomain(domain));
+    }
+
 }
