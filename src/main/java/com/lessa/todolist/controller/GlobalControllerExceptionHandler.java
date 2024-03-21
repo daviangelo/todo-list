@@ -18,14 +18,14 @@ public class GlobalControllerExceptionHandler {
 
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<String> handleConflictException(ConflictException exception) {
-        log.info(exception.getMessage(), exception);
+        log.info(exception.getMessage());
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
     }
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<String> handleNotFoundException(NotFoundException exception) {
-        log.info(exception.getMessage(), exception);
+        log.info(exception.getMessage());
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
     }
