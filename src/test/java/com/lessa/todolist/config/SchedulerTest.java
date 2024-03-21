@@ -17,7 +17,7 @@ class SchedulerTest {
     private TodoServiceImpl todoService;
 
     @Test
-    void waitTaskToBeExecuted() {
+    void shouldWaitUntilTaskBeExecuted() {
         await()
                 .atMost(Duration.ONE_SECOND)
                 .untilAsserted(() -> verify(todoService, atLeast(1)).updatePastDueItemsStatus());
