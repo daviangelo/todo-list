@@ -9,13 +9,16 @@ import com.lessa.todolist.service.TodoService;
 import com.lessa.todolist.service.exception.ConflictException;
 import com.lessa.todolist.service.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TodoServiceImpl implements TodoService {
@@ -101,9 +104,13 @@ public class TodoServiceImpl implements TodoService {
         return findItemById(itemId);
     }
 
+    @Scheduled(cron = "${cron.expression.update.status}")
+    @Transactional
     @Override
     public void updatePastDueItemsStatus() {
-        repository.updatePastDueItemsStatus(timeService.getLocalDateTime());
+        log.info("Updating past due item status...");
+        var updatedItems = repository.updatePastDueItemsStatus(timeService.getLocalDateTime());
+        log.info("{} items status updated to past due.", updatedItems);
     }
 
     private TodoItem findItemById(UUID itemId) throws NotFoundException {
