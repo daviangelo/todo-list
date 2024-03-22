@@ -10,6 +10,7 @@ Since the service is running, the Swagger documentation is available at http://l
 
 The main idea is to manage TODO items with the following properties:
 
+- id
 - description
 - status (not done, done and past due)
 - creation date
